@@ -1,1 +1,1 @@
-{"routes":[{"path":"/","title":"CareBridge"},{"path":"/404","title":"Not found"}]}
+{"routes":[{"path":"/","title":"CareBridge"},{"path":"/invite/:token","title":"Join family care circle"},{"path":"/404","title":"Not found"}]}

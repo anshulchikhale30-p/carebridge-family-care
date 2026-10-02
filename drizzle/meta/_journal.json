@@ -8,6 +8,20 @@
       "when": 1788785580464,
       "tag": "0000_initial_users",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1790922876100,
+      "tag": "0001_magical_surge",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1790923501786,
+      "tag": "0002_same_masked_marvel",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,2 @@
+ALTER TABLE `familyMembers` ADD CONSTRAINT `familyMembers_family_user_unique` UNIQUE(`familyId`,`userId`);--> statement-breakpoint
+ALTER TABLE `notificationPreferences` ADD CONSTRAINT `notificationPreferences_family_user_unique` UNIQUE(`familyId`,`userId`);
