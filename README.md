@@ -43,6 +43,7 @@ Nothing important is silently changed by AI. A person reviews the draft before i
 The preview contains synthetic data. Use the sidebar to explore:
 
 - **Overview** — the next appointment and the family’s immediate priorities
+- **Today’s care brief** — a prioritized decision queue that surfaces what needs a human next
 - **Care plan** — tasks, ownership, due times, and completion state
 - **Family** — people, roles, languages, and accessibility needs
 - **Calendar** — appointment context and exportable calendar data
@@ -73,6 +74,12 @@ CareBridge includes family roles, invitations, consent records, privacy-aware sn
 
 CareBridge does not diagnose, prescribe, or replace a medical professional. Medication information is a reminder to verify, not a medical instruction.
 
+### Run an open-weight model where the care data lives
+
+The repository includes a small Render-ready FastAPI service in [`ai-runtime/`](ai-runtime/) for bounded extraction of coordination details. It can run an open-weight Hugging Face model, returns structured drafts, and falls back to a deterministic safe extractor if the model is unavailable. Every response is explicitly marked `requires_human_review: true`.
+
+The [`render.yaml`](render.yaml) Blueprint creates both the web app and the AI runtime. See [`docs/RENDER.md`](docs/RENDER.md) for deployment and cold-start notes.
+
 ## Architecture
 
 ```text
@@ -100,12 +107,14 @@ Human confirmation
 - tRPC for typed client/server procedures
 - Drizzle ORM + MySQL for durable data
 - Manus OAuth for account identity
+- Render Blueprint with a separate open-weight AI runtime
 - Vitest for automated tests
 - Server-side role, consent, audit, and family-scope checks
 
 ## Repository Structure
 
 ```text
+ai-runtime/   Render-ready open-weight extraction service
 client/       React application, pages, components, and styles
 server/       tRPC procedures, authentication context, database helpers
 shared/       Shared types and constants
@@ -157,7 +166,7 @@ Open technologies make the system easier to inspect, adapt, and extend for diffe
 - What did a person confirm?
 - What happens when the system is uncertain?
 
-The current project is built on open web technologies and open-source frameworks. The next model-integration step is to connect a self-hosted or open-weight model to the bounded extraction stage while preserving the same consent and human-review boundary.
+The current project is built on open web technologies, open-source frameworks, and an open-weight model runtime that can be self-hosted on Render. The model is replaceable through `MODEL_ID`; the consent and human-review boundary stays the same even when the model changes.
 
 ## Validation Status
 

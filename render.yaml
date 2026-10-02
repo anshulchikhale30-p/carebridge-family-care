@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: carebridge-ai-runtime
+    runtime: python
+    rootDir: ai-runtime
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: MODEL_ID
+        value: HuggingFaceTB/SmolLM2-360M-Instruct
+
+  - type: web
+    name: carebridge-web
+    runtime: node
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    plan: starter
+    envVars:
+      - key: AI_RUNTIME_URL
+        fromService:
+          type: web
+          name: carebridge-ai-runtime
+          property: host
