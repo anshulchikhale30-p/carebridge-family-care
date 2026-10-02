@@ -40,6 +40,33 @@ async function startServer() {
       return res.status(502).json({ error: "The AI runtime is temporarily unavailable." });
     }
   });
+  app.post("/api/voice/transcribe", async (req, res) => {
+    if (!process.env.ELEVENLABS_API_KEY) return res.status(503).json({ error: "ElevenLabs voice is not configured yet.", fallback: true });
+    const audioBase64 = typeof req.body?.audioBase64 === "string" ? req.body.audioBase64 : "";
+    const audioType = typeof req.body?.audioType === "string" ? req.body.audioType : "audio/webm";
+    if (!audioBase64 || audioBase64.length > 12_000_000) return res.status(400).json({ error: "A short audio recording is required." });
+    try {
+      const bytes = Buffer.from(audioBase64, "base64");
+      const form = new FormData();
+      form.append("file", new Blob([bytes], { type: audioType }), "care-update.webm");
+      form.append("model_id", "scribe_v1");
+      const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", { method: "POST", headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY }, body: form });
+      const payload = await response.json();
+      return res.status(response.status).json({ text: payload.text ?? "", provider: "ElevenLabs", raw: payload });
+    } catch { return res.status(502).json({ error: "ElevenLabs transcription is temporarily unavailable." }); }
+  });
+  app.post("/api/voice/speak", async (req, res) => {
+    if (!process.env.ELEVENLABS_API_KEY) return res.status(503).json({ error: "ElevenLabs voice is not configured yet.", fallback: true });
+    const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+    if (!text || text.length > 3000) return res.status(400).json({ error: "A short approved handoff is required." });
+    try {
+      const voiceId = typeof req.body?.voiceId === "string" ? req.body.voiceId : "JBFqnCBsd6RMkjVDRZzb";
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, { method: "POST", headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" }, body: JSON.stringify({ text, model_id: "eleven_multilingual_v2", output_format: "mp3_44100_128" }) });
+      if (!response.ok) return res.status(response.status).json({ error: "ElevenLabs speech generation failed." });
+      const audio = Buffer.from(await response.arrayBuffer()).toString("base64");
+      return res.json({ audioBase64: audio, mimeType: "audio/mpeg", provider: "ElevenLabs" });
+    } catch { return res.status(502).json({ error: "ElevenLabs speech is temporarily unavailable." }); }
+  });
   app.get("/api/platform/config.js", (_req, res) => {
     res.set("Cache-Control", "no-store").type("application/javascript").send(publicPlatformScript());
   });

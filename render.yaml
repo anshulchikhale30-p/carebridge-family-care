@@ -23,3 +23,5 @@ services:
           type: web
           name: carebridge-ai-runtime
           property: host
+      - key: ELEVENLABS_API_KEY
+        sync: false

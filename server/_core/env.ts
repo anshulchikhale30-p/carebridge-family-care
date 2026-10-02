@@ -10,4 +10,5 @@ export const ENV = {
   get forgeApiUrl() { return process.env.MANUS_API_URL ?? ""; },
   get forgeApiKey() { return process.env.MANUS_API_KEY ?? ""; },
   get aiRuntimeUrl() { return process.env.AI_RUNTIME_URL ?? ""; },
+  get elevenLabsApiKey() { return process.env.ELEVENLABS_API_KEY ?? ""; },
 };

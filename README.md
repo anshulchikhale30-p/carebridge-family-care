@@ -44,6 +44,7 @@ The preview contains synthetic data. Use the sidebar to explore:
 
 - **Overview** — the next appointment and the family’s immediate priorities
 - **Handoff studio** — capture → extract → approve → share a verified care handoff
+- **Voice-first handoff** — record an update with ElevenLabs Speech to Text, review the transcript, then play the approved handoff aloud with ElevenLabs Text to Speech
 - **Today’s care brief** — a prioritized decision queue that surfaces what needs a human next
 - **Care plan** — tasks, ownership, due times, and completion state
 - **Family** — people, roles, languages, and accessibility needs
@@ -81,6 +82,10 @@ The repository includes a small Render-ready FastAPI service in [`ai-runtime/`](
 
 The [`render.yaml`](render.yaml) Blueprint creates both the web app and the AI runtime. See [`docs/RENDER.md`](docs/RENDER.md) for deployment and cold-start notes.
 
+### ElevenLabs voice layer
+
+CareBridge keeps voice useful without making it invisible: a family member can speak naturally, ElevenLabs transcribes the update, and the text remains an editable draft until a person approves it. The approved details can then be read back aloud. The API key is server-only through `ELEVENLABS_API_KEY`; the Render Blueprint declares it as a secret value and never checks it into the repository.
+
 ## Architecture
 
 ```text
@@ -109,6 +114,7 @@ Human confirmation
 - Drizzle ORM + MySQL for durable data
 - Manus OAuth for account identity
 - Render Blueprint with a separate open-weight AI runtime
+- ElevenLabs Speech to Text and Text to Speech through server-only proxy routes
 - Vitest for automated tests
 - Server-side role, consent, audit, and family-scope checks
 
