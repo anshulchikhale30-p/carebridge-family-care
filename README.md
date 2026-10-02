@@ -6,7 +6,7 @@ CareBridge is a family-care coordination workspace for the moments when love bec
 
 An appointment is tomorrow. One person knows the time. Someone else can drive. A third person has the prescription. The older adult is asking the same question again—not because they are difficult, but because the information is scattered across phone calls, paper notes, and a busy family group chat.
 
-CareBridge gives the family one calm place to see what is happening, who owns the next step, and what changed.
+CareBridge gives a family one focused handoff: turn a messy voice or text update into verified next steps, then make ownership and follow-through visible.
 
 ## Why I Built This
 
@@ -32,7 +32,7 @@ The demo uses synthetic family data so it can be explored safely.
 
 A grandmother has a hospital visit on Thursday. Her daughter is coordinating the plan. Her grandson can drive. Her granddaughter can call after the appointment. A prescription still needs to be picked up.
 
-A single voice update becomes a set of **reviewable** details. The family can assign the ride, acknowledge the task, prepare a multilingual confirmation, and see the history of what happened.
+A single voice or text update becomes a set of **reviewable** details. The family can approve only the useful parts, assign the ride, prepare a multilingual confirmation, and see the history of what happened.
 
 Nothing important is silently changed by AI. A person reviews the draft before it becomes part of the shared care plan.
 
@@ -43,6 +43,7 @@ Nothing important is silently changed by AI. A person reviews the draft before i
 The preview contains synthetic data. Use the sidebar to explore:
 
 - **Overview** — the next appointment and the family’s immediate priorities
+- **Handoff studio** — capture → extract → approve → share a verified care handoff
 - **Today’s care brief** — a prioritized decision queue that surfaces what needs a human next
 - **Care plan** — tasks, ownership, due times, and completion state
 - **Family** — people, roles, languages, and accessibility needs
@@ -54,7 +55,7 @@ The preview contains synthetic data. Use the sidebar to explore:
 
 ### Turn scattered updates into a reviewable plan
 
-Voice and text updates can become structured drafts containing possible appointments, tasks, people, and follow-ups. The draft is not automatically trusted. A family member reviews it before sharing.
+Voice and text updates can become structured drafts containing possible appointments, tasks, people, and follow-ups. The draft is not automatically trusted. A family member reviews each item before sharing a verified handoff.
 
 ### Make invisible care work visible
 

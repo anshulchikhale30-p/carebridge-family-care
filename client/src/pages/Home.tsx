@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CareCommandCenter from "@/components/CareCommandCenter";
+import CareHandoffStudio from "@/components/CareHandoffStudio";
 import ProductionReadinessPanel from "@/components/ProductionReadinessPanel";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -193,12 +194,13 @@ export default function Home() {
 
   const navItems = [
     { label: "Overview", icon: LayoutDashboard },
+    { label: "Handoff studio", icon: Sparkles },
     { label: "Care plan", icon: ClipboardList, count: activeCount },
     { label: "Family", icon: UsersRound },
     { label: "Calendar", icon: CalendarDays },
     { label: "Memories", icon: BookHeart },
   ];
-  const navTargets: Record<string, string> = { Overview: "overview", "Care plan": "care-plan", Family: "family", Calendar: "calendar", Memories: "memories" };
+  const navTargets: Record<string, string> = { Overview: "overview", "Handoff studio": "handoff", "Care plan": "care-plan", Family: "family", Calendar: "calendar", Memories: "memories" };
   const goToSection = (label: string) => {
     setActiveNav(label);
     setMobileNavOpen(false);
@@ -255,6 +257,8 @@ export default function Home() {
             <section id="overview" className="scroll-mt-24 flex flex-col justify-between gap-4 border-b border-[#e1ddd3] pb-6 sm:flex-row sm:items-end"><div><div className="flex items-center gap-2 text-xs font-bold text-[#2f6b58]"><span className="h-2 w-2 rounded-full bg-[#55a07f]" /> Sample family care plan · demo workspace</div><h2 className="mt-2 font-display text-[32px] font-semibold leading-tight tracking-[-0.04em] text-[#263c35] sm:text-[38px]">One less thing to carry<br className="hidden sm:block" /> on your own.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#77756d]">Here’s the latest on Leela’s appointment — and what each person can do to make Thursday feel a little easier.</p></div><Button className="h-11 shrink-0 rounded-xl bg-[#2f6b58] px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(47,107,88,.16)] hover:bg-[#265a4a]" onClick={() => setNoteOpen(true)}><Plus className="h-4 w-4" /> Add a care update</Button></section>
 
             <CareCommandCenter activeTasks={activeCount} completedTasks={completedCount} onRecord={toggleRecording} onReview={() => setReviewOpen(true)} onPlan={() => goToSection("Care plan")} />
+
+            <CareHandoffStudio onToast={showToast} />
 
             <section id="calendar" className="scroll-mt-24 mt-7 grid gap-5 xl:grid-cols-[minmax(0,1.42fr)_minmax(330px,.78fr)]">
               <div className="overflow-hidden rounded-[22px] border border-[#dfddd4] bg-[#fffdf9] shadow-[0_8px_24px_rgba(43,56,50,.035)]">

@@ -15,6 +15,31 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+  app.post("/api/ai/extract", async (req, res) => {
+    const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+    const language = typeof req.body?.language === "string" ? req.body.language : "English";
+    if (!text || text.length > 10000) return res.status(400).json({ error: "A note between 1 and 10000 characters is required." });
+    if (!process.env.AI_RUNTIME_URL) {
+      const lowered = text.toLowerCase();
+      const details = [
+        ...(/(doctor|hospital|appointment|clinic)/.test(lowered) ? [{ type: "appointment", value: "Review the appointment or visit details" }] : []),
+        ...(/(ride|drive|take her|take him|transport)/.test(lowered) ? [{ type: "transport", value: "Arrange or confirm transportation" }] : []),
+        ...(/(call|check in|check-in|remind)/.test(lowered) ? [{ type: "follow_up", value: "Schedule a family follow-up or reminder" }] : []),
+        ...(/(folder|prescription|document)/.test(lowered) ? [{ type: "task", value: "Bring or locate the referenced document" }] : []),
+      ];
+      return res.json({ model: "safe-preview-fallback", requires_human_review: true, draft: { summary: text.slice(0, 240), details: details.length ? details : [{ type: "task", value: "Review this update and decide what the family should know" }], confidence: 0 } });
+    }
+    try {
+      const configuredRuntime = process.env.AI_RUNTIME_URL;
+      const runtimeBase = configuredRuntime.startsWith("http") ? configuredRuntime : `https://${configuredRuntime}`;
+      const runtimeUrl = `${runtimeBase.replace(/\/$/, "")}/extract`;
+      const response = await fetch(runtimeUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, language }) });
+      const payload = await response.json();
+      return res.status(response.status).json(payload);
+    } catch {
+      return res.status(502).json({ error: "The AI runtime is temporarily unavailable." });
+    }
+  });
   app.get("/api/platform/config.js", (_req, res) => {
     res.set("Cache-Control", "no-store").type("application/javascript").send(publicPlatformScript());
   });
