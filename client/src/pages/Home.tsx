@@ -38,6 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import CareCommandCenter from "@/components/CareCommandCenter";
 import CareHandoffStudio from "@/components/CareHandoffStudio";
+import FamilyCareTree from "@/components/FamilyCareTree";
 import ProductionReadinessPanel from "@/components/ProductionReadinessPanel";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -255,6 +256,8 @@ export default function Home() {
 
           <div className="mx-auto max-w-[1500px] px-5 pb-12 pt-7 sm:px-8 lg:px-10">
             <section id="overview" className="scroll-mt-24 flex flex-col justify-between gap-4 border-b border-[#e1ddd3] pb-6 sm:flex-row sm:items-end"><div><div className="flex items-center gap-2 text-xs font-bold text-[#2f6b58]"><span className="h-2 w-2 rounded-full bg-[#55a07f]" /> Sample family care plan · demo workspace</div><h2 className="mt-2 font-display text-[32px] font-semibold leading-tight tracking-[-0.04em] text-[#263c35] sm:text-[38px]">One less thing to carry<br className="hidden sm:block" /> on your own.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#77756d]">Here’s the latest on Leela’s appointment — and what each person can do to make Thursday feel a little easier.</p></div><Button className="h-11 shrink-0 rounded-xl bg-[#2f6b58] px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(47,107,88,.16)] hover:bg-[#265a4a]" onClick={() => setNoteOpen(true)}><Plus className="h-4 w-4" /> Add a care update</Button></section>
+
+            <FamilyCareTree />
 
             <CareCommandCenter activeTasks={activeCount} completedTasks={completedCount} onRecord={toggleRecording} onReview={() => setReviewOpen(true)} onPlan={() => goToSection("Care plan")} />
 
