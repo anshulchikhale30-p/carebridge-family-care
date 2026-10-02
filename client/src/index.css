@@ -84,3 +84,18 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* Editorial page rhythm: the family story should breathe instead of reading like a grid of menu cards. */
+.care-canvas > section:not(.care-section-flow) { position: relative; }
+.care-story-section { position: relative; }
+.care-story-section::before { content: ""; position: absolute; left: 7%; right: 7%; top: -24px; height: 1px; background: linear-gradient(90deg, transparent, rgba(121,168,143,.35), transparent); }
+.care-section-flow > div { border-color: transparent !important; box-shadow: none !important; }
+.care-section-flow > div:first-child { background: rgba(255,253,249,.78) !important; }
+.care-section-flow > div:last-child { background: rgba(255,255,255,.46) !important; }
+.care-section-flow > div > div:first-child { border-color: rgba(224,220,210,.7) !important; }
+.care-section-flow .rounded-\[22px\], .care-section-flow .rounded-\[28px\] { border-radius: 26px; }
+@media (min-width: 1024px) {
+  .care-section-flow > div:first-child { transform: translateY(10px); }
+  .care-section-flow > div:last-child { transform: translateY(-8px); }
+  .care-story-section { margin-left: 3%; margin-right: 3%; }
+}

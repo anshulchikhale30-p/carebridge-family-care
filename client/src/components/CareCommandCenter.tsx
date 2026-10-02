@@ -59,7 +59,7 @@ export default function CareCommandCenter({
   const completion = Math.round((completedTasks / totalTasks) * 100);
 
   return (
-    <section aria-labelledby="command-center-title" className="mt-7 overflow-hidden rounded-[28px] border border-[#d9e4dc] bg-[#eef7f0] shadow-[0_14px_36px_rgba(47,107,88,.07)]">
+    <section aria-labelledby="command-center-title" className="care-story-section mt-14 overflow-hidden rounded-[30px] border border-[#d9e4dc] bg-[#eef7f0] shadow-[0_14px_36px_rgba(47,107,88,.07)]">
       <div className="grid lg:grid-cols-[1.05fr_.95fr]">
         <div className="relative overflow-hidden px-5 py-6 sm:px-8 sm:py-8">
           <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full border-[28px] border-[#dcecdf] opacity-80" />
