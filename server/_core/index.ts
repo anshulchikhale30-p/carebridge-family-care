@@ -27,7 +27,7 @@ async function startServer() {
         ...(/(call|check in|check-in|remind)/.test(lowered) ? [{ type: "follow_up", value: "Schedule a family follow-up or reminder" }] : []),
         ...(/(folder|prescription|document)/.test(lowered) ? [{ type: "task", value: "Bring or locate the referenced document" }] : []),
       ];
-      return res.json({ model: "safe-preview-fallback", requires_human_review: true, draft: { summary: text.slice(0, 240), details: details.length ? details : [{ type: "task", value: "Review this update and decide what the family should know" }], confidence: 0 } });
+      return res.json({ model: "safe-local-fallback", requires_human_review: true, draft: { summary: text.slice(0, 240), details: details.length ? details : [{ type: "task", value: "Review this update and decide what the family should know" }], confidence: 0 } });
     }
     try {
       const configuredRuntime = process.env.AI_RUNTIME_URL;

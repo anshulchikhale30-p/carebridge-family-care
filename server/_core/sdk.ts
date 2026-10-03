@@ -32,7 +32,7 @@ class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
     console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
     if (!ENV.oAuthServerUrl) {
-      console.warn("[OAuth] Optional sign-in is disabled; anonymous demo mode is active.");
+      console.warn("[OAuth] Optional sign-in is disabled; anonymous local-first mode is active.");
     }
   }
 

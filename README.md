@@ -26,9 +26,9 @@ The problem is not that families do not care. The problem is that care is distri
 
 CareBridge is designed to make care **shared, visible, and kind**—without turning a family into a project-management meeting.
 
-## The Demo Story
+## The Product Story
 
-The demo uses synthetic family data so it can be explored safely.
+CareBridge opens with a safe local-first family workspace so it is immediately usable without login. The workspace can be replaced with a connected family circle when account sync is enabled.
 
 A grandmother has a hospital visit on Thursday. Her daughter is coordinating the plan. Her grandson can drive. Her granddaughter can call after the appointment. A prescription still needs to be picked up.
 
@@ -40,7 +40,7 @@ Nothing important is silently changed by AI. A person reviews the draft before i
 
 **[Open CareBridge](https://carebridge-family-care.onrender.com)**
 
-The preview contains synthetic data. Use the sidebar to explore:
+The starter workspace contains clearly labeled family records that can be edited locally. Use the sidebar to explore:
 
 - **Overview** — the next appointment and the family’s immediate priorities
 - **Handoff studio** — capture → extract → approve → share a verified care handoff
@@ -152,7 +152,7 @@ pnpm db:migrate     # Apply checked-in database migrations
 
 CareBridge is a coordination tool, not a clinical system.
 
-- Demo data is synthetic.
+- The starter workspace uses safe example records; user-created updates persist locally on the device until a family account is connected.
 - AI-generated text is treated as a draft.
 - Human review is required before sharing extracted care information.
 - Ambiguous or sensitive decisions should be clarified, not guessed.
