@@ -38,7 +38,7 @@ Nothing important is silently changed by AI. A person reviews the draft before i
 
 ## Live Demo
 
-**[Open CareBridge](https://3000-imnxg3gbyzg3o6oocxpte-8f33efbe.sg2.manus.computer)**
+**[Open CareBridge](https://carebridge-family-care.onrender.com)**
 
 The preview contains synthetic data. Use the sidebar to explore:
 
