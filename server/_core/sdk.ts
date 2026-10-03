@@ -32,9 +32,7 @@ class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
     console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
     if (!ENV.oAuthServerUrl) {
-      console.error(
-        "[OAuth] ERROR: MANUS_OAUTH_API_URL is not configured! Set MANUS_OAUTH_API_URL environment variable."
-      );
+      console.warn("[OAuth] Optional sign-in is disabled; anonymous demo mode is active.");
     }
   }
 
@@ -121,6 +119,7 @@ class SDKServer {
     code: string,
     state: string
   ): Promise<ExchangeTokenResponse> {
+    if (!ENV.oAuthServerUrl) throw new Error("OAuth sign-in is not enabled for this deployment");
     return this.oauthService.getTokenByCode(code, state);
   }
 
