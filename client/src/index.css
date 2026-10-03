@@ -67,13 +67,47 @@
   --sidebar-ring: #79a88f;
 }
 
+.dark {
+  --primary: #4ec9a0;
+  --primary-foreground: #0a1f18;
+  --background: #0d1512;
+  --foreground: #e8f0ec;
+  --card: #152019;
+  --card-foreground: #e8f0ec;
+  --popover: #152019;
+  --popover-foreground: #e8f0ec;
+  --secondary: #1a2b23;
+  --secondary-foreground: #b8d4c8;
+  --muted: #1a2b23;
+  --muted-foreground: #7a9488;
+  --accent: #1a3a2e;
+  --accent-foreground: #4ec9a0;
+  --destructive: #e06c68;
+  --destructive-foreground: #fff9f7;
+  --border: #2a3f35;
+  --input: #2a3f35;
+  --ring: #4ec9a0;
+  --sidebar: #111c16;
+  --sidebar-foreground: #b8d4c8;
+  --sidebar-primary: #4ec9a0;
+  --sidebar-primary-foreground: #0a1f18;
+  --sidebar-accent: #1a3a2e;
+  --sidebar-border: #2a3f35;
+  --sidebar-ring: #4ec9a0;
+}
+
 * { box-sizing: border-box; }
-html { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #f6f4ef; }
-body { margin: 0; min-width: 320px; background: #f6f4ef; color: #202b29; -webkit-font-smoothing: antialiased; }
+html { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #f6f4ef; transition: background-color 0.4s ease, color 0.4s ease; }
+html.dark { background: #0d1512; }
+body { margin: 0; min-width: 320px; background: #f6f4ef; color: #202b29; -webkit-font-smoothing: antialiased; transition: background-color 0.4s ease, color 0.4s ease; }
+body:where(.dark *) { background: #0d1512; color: #e8f0ec; }
 button, input, textarea, select { font: inherit; }
 button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid rgba(121, 168, 143, .45); outline-offset: 2px; }
 .font-display { font-family: 'Fraunces', Georgia, serif; }
 ::selection { background: #cce2d7; color: #203b30; }
+.dark ::selection { background: #1a3a2e; color: #4ec9a0; }
+
+*, *::before, *::after { transition-property: background-color, border-color, color, fill, stroke, box-shadow; transition-duration: 0.3s; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
 
 @layer base {
   * { @apply border-border outline-ring/50; }
