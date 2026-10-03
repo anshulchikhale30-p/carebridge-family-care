@@ -100,7 +100,7 @@ export default function ProductionReadinessPanel({ activeTasks = 3, completedTas
   const requestFamilyDeletion = () => {
     const family = familyList.data?.[0];
     if (!family) {
-      if (window.confirm("Clear this local CareBridge workspace from this device?")) setPrivacyMessage("Local workspace cleared for this session. No account data was created.");
+      if (window.confirm("Clear this local CareBridge workspace from this device?")) setPrivacyMessage("This local workspace has no account data to delete. Your exported records remain on this device until you remove them.");
       return;
     }
     const typedName = window.prompt(`Type ${family.name} to request deletion review.`);
