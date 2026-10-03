@@ -51,8 +51,17 @@ async function startServer() {
       form.append("file", new Blob([bytes], { type: audioType }), "care-update.webm");
       form.append("model_id", "scribe_v1");
       const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", { method: "POST", headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY }, body: form });
-      const payload = await response.json();
-      return res.status(response.status).json({ text: payload.text ?? "", provider: "ElevenLabs", raw: payload });
+      const payload = await response.json() as { text?: string; detail?: { message?: string; code?: string }; message?: string };
+      if (!response.ok) {
+        return res.status(response.status).json({
+          error: payload.detail?.message ?? payload.message ?? "ElevenLabs rejected the recording request.",
+          code: payload.detail?.code ?? "ELEVENLABS_REQUEST_FAILED",
+          provider: "ElevenLabs",
+        });
+      }
+      const text = typeof payload.text === "string" ? payload.text.trim() : "";
+      if (!text) return res.status(422).json({ error: "ElevenLabs returned an empty transcript. Record a longer, clearer update and try again.", code: "EMPTY_TRANSCRIPT", provider: "ElevenLabs" });
+      return res.json({ text, provider: "ElevenLabs" });
     } catch { return res.status(502).json({ error: "ElevenLabs transcription is temporarily unavailable." }); }
   });
   app.post("/api/voice/speak", async (req, res) => {
