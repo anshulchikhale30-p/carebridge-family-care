@@ -109,13 +109,17 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewItems, setReviewItems] = useState<Array<{ icon: typeof CalendarDays; label: string; value: string }>>([]);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteSaved, setNoteSaved] = useState(false);
   const [noteText, setNoteText] = useState("Leela felt reassured after the appointment.");
   const [language, setLanguage] = useState("Marathi");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [transcribing, setTranscribing] = useState(false);
   const recordingTimer = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const { isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const acceptInvite = trpc.family.acceptInvite.useMutation();
@@ -154,47 +158,97 @@ export default function Home() {
     showToast("Task assigned to Asha");
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      if (recordingTimer.current) window.clearInterval(recordingTimer.current);
-      recordingTimer.current = null;
-      setIsRecording(false);
-      setRecordingSeconds(12);
-      setReviewOpen(true);
+  const startVoiceRecording = () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showToast("This browser does not support voice capture");
       return;
     }
-    setIsRecording(true);
-    setRecordingSeconds(0);
-    recordingTimer.current = window.setInterval(() => {
-      setRecordingSeconds((value) => {
-        if (value >= 11) {
-          if (recordingTimer.current) window.clearInterval(recordingTimer.current);
-          recordingTimer.current = null;
-          setIsRecording(false);
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+      recorder.ondataavailable = (event) => { if (event.data.size) chunksRef.current.push(event.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setTranscribing(true);
+        showToast("Transcribing voice note…");
+        try {
+          const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+          const audioBase64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(String(reader.result).split(",")[1] ?? "");
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          const transcribeRes = await fetch("/api/voice/transcribe", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ audioBase64, audioType: blob.type }),
+          });
+          const transcribePayload = await transcribeRes.json() as { text?: string; error?: string };
+          if (!transcribeRes.ok || !transcribePayload.text) throw new Error(transcribePayload.error ?? "No transcript returned");
+          const transcript = transcribePayload.text;
+          showToast("Transcript ready — extracting care details…");
+          const extractRes = await fetch("/api/ai/extract", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ text: transcript, language: "English", person: "Grandma", emotion: "Worried" }),
+          });
+          const extractPayload = await extractRes.json() as { draft?: { details?: Array<{ type?: string; value?: string }> } };
+          const extracted = (extractPayload.draft?.details ?? []).map((item) => ({
+            type: item.type ?? "task",
+            value: item.value ?? "Possible care action",
+          }));
+          const iconMap: Record<string, typeof CalendarDays> = { appointment: CalendarDays, transport: Navigation, medication_context: Plus, follow_up: Phone, task: ShoppingBag };
+          const labelMap: Record<string, string> = { appointment: "Appointment", transport: "Transportation", medication_context: "Medication reminder", follow_up: "Family check-in", task: "Task" };
+          const items = extracted.length
+            ? extracted.map((item) => ({ icon: iconMap[item.type] ?? ShoppingBag, label: labelMap[item.type] ?? "Task", value: item.value }))
+            : [{ icon: ShoppingBag, label: "Task", value: "Review this update and decide what the family should know" }];
+          setReviewItems(items);
           setReviewOpen(true);
-          return 12;
+          showToast("Care details extracted successfully");
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : "Voice processing failed");
+        } finally {
+          setTranscribing(false);
         }
-        return value + 1;
-      });
-    }, 1000);
+      };
+      recorder.start();
+      setIsRecording(true);
+      setRecordingSeconds(0);
+      recordingTimer.current = window.setInterval(() => {
+        setRecordingSeconds((value) => {
+          if (value >= 119) {
+            if (recordingTimer.current) window.clearInterval(recordingTimer.current);
+            recordingTimer.current = null;
+            setIsRecording(false);
+            mediaRecorderRef.current?.stop();
+            return 120;
+          }
+          return value + 1;
+        });
+      }, 1000);
+    }).catch(() => showToast("Microphone permission was not granted"));
+  };
+
+  const stopVoiceRecording = () => {
+    if (recordingTimer.current) window.clearInterval(recordingTimer.current);
+    recordingTimer.current = null;
+    setIsRecording(false);
+    mediaRecorderRef.current?.stop();
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopVoiceRecording();
+    } else {
+      startVoiceRecording();
+    }
   };
 
   const retryRecording = () => {
     setReviewOpen(false);
-    setRecordingSeconds(0);
-    setIsRecording(true);
-    recordingTimer.current = window.setInterval(() => {
-      setRecordingSeconds((value) => {
-        if (value >= 11) {
-          if (recordingTimer.current) window.clearInterval(recordingTimer.current);
-          recordingTimer.current = null;
-          setIsRecording(false);
-          setReviewOpen(true);
-          return 12;
-        }
-        return value + 1;
-      });
-    }, 1000);
+    startVoiceRecording();
   };
 
   const navItems = [
@@ -300,7 +354,7 @@ export default function Home() {
 
       {toast && <div className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#233a32] px-4 py-3 text-xs font-bold text-white shadow-xl transition-colors dark:bg-[#1a3a2e]"><CheckCircle2 className="h-4 w-4 text-[#a9d3b9] dark:text-[#4ec9a0]" /> {toast}</div>}
 
-      {reviewOpen && <div role="dialog" aria-modal="true" aria-labelledby="review-title" className="fixed inset-0 z-50 flex items-center justify-center bg-[#20312c]/35 p-4 backdrop-blur-sm transition-colors dark:bg-[#000000]/50"><div className="w-full max-w-xl overflow-hidden rounded-[24px] border border-[#e1ddd3] bg-[#fffdf9] shadow-2xl transition-colors dark:border-[#2a3f35] dark:bg-[#152019]"><div className="flex items-start justify-between border-b border-[#ebe7de] p-5 transition-colors dark:border-[#2a3f35] sm:p-6"><div><div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#2f6b58] dark:text-[#4ec9a0]"><Sparkles className="h-3.5 w-3.5" /> Review before sharing · demo</div><h3 id="review-title" className="mt-2 font-display text-[25px] font-semibold tracking-[-0.035em] text-[#2b3934] dark:text-[#e8f0ec]">We heard five things.</h3><p className="mt-1 text-sm text-[#85837a] dark:text-[#7a9488]">Check the details before they become part of the family care plan.</p></div><button aria-label="Close review" onClick={() => setReviewOpen(false)} className="rounded-lg p-2 text-[#aaa398] transition-colors hover:bg-[#f2f0ea] dark:text-[#7a9488] dark:hover:bg-[#1a2b23]"><X className="h-5 w-5" /></button></div><div className="space-y-3 p-5 sm:p-6">{[{ icon: CalendarDays, label: "Appointment", value: "CityCare Hospital · Thursday at 10:00 AM" }, { icon: Navigation, label: "Transportation", value: "Leela needs someone to take her" }, { icon: Plus, label: "Medication reminder", value: "Remember the tablets before leaving" }, { icon: ShoppingBag, label: "Grocery pickup", value: "Blood-pressure tablets at Green Cross Pharmacy" }, { icon: Phone, label: "Family check-in", value: "Asha to confirm the plan in Marathi" }].map((item) => { const Icon = item.icon; return <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-[#ebe7de] bg-[#fbfaf7] p-3.5 transition-colors dark:border-[#2a3f35] dark:bg-[#111c16]"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#2f6b58] transition-colors dark:bg-[#1a3a2e] dark:text-[#4ec9a0]"><Icon className="h-4 w-4" /></div><div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a49f94] dark:text-[#7a9488]">{item.label}</p><p className="mt-1 text-sm font-semibold text-[#46524d] dark:text-[#e8f0ec]">{item.value}</p></div></div>; })}</div><div className="flex justify-end gap-2 border-t border-[#ebe7de] p-5 transition-colors dark:border-[#2a3f35] sm:p-6"><Button variant="outline" onClick={() => setReviewOpen(false)} className="h-11 rounded-xl border-[#ded9cf] text-sm font-bold text-[#77756d] transition-colors dark:border-[#2a3f35] dark:text-[#7a9488]">Cancel</Button><Button onClick={() => { setReviewOpen(false); showToast("Care update shared with family"); }} className="h-11 rounded-xl bg-[#2f6b58] px-5 text-sm font-bold text-white transition-all hover:bg-[#265a4a] dark:bg-[#4ec9a0] dark:text-[#0a1f18] dark:hover:bg-[#5ed4aa]">Share with family <ArrowUpRight className="h-3.5 w-3.5" /></Button></div></div></div>}
+      {reviewOpen && <div role="dialog" aria-modal="true" aria-labelledby="review-title" className="fixed inset-0 z-50 flex items-center justify-center bg-[#20312c]/35 p-4 backdrop-blur-sm transition-colors dark:bg-[#000000]/50"><div className="w-full max-w-xl overflow-hidden rounded-[24px] border border-[#e1ddd3] bg-[#fffdf9] shadow-2xl transition-colors dark:border-[#2a3f35] dark:bg-[#152019]"><div className="flex items-start justify-between border-b border-[#ebe7de] p-5 transition-colors dark:border-[#2a3f35] sm:p-6"><div><div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#2f6b58] dark:text-[#4ec9a0]"><Sparkles className="h-3.5 w-3.5" /> Review before sharing · demo</div><h3 id="review-title" className="mt-2 font-display text-[25px] font-semibold tracking-[-0.035em] text-[#2b3934] dark:text-[#e8f0ec]">We heard {reviewItems.length} {reviewItems.length === 1 ? "thing" : "things"}.</h3><p className="mt-1 text-sm text-[#85837a] dark:text-[#7a9488]">Check the details before they become part of the family care plan.</p></div><button aria-label="Close review" onClick={() => setReviewOpen(false)} className="rounded-lg p-2 text-[#aaa398] transition-colors hover:bg-[#f2f0ea] dark:text-[#7a9488] dark:hover:bg-[#1a2b23]"><X className="h-5 w-5" /></button></div><div className="space-y-3 p-5 sm:p-6">{reviewItems.map((item, idx) => { const Icon = item.icon; return <div key={`${item.label}-${idx}`} className="flex items-center gap-3 rounded-2xl border border-[#ebe7de] bg-[#fbfaf7] p-3.5 transition-colors dark:border-[#2a3f35] dark:bg-[#111c16]"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#2f6b58] transition-colors dark:bg-[#1a3a2e] dark:text-[#4ec9a0]"><Icon className="h-4 w-4" /></div><div className="min-w-0"><p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a49f94] dark:text-[#7a9488]">{item.label}</p><p className="mt-1 text-sm font-semibold text-[#46524d] dark:text-[#e8f0ec]">{item.value}</p></div></div>; })}</div><div className="flex justify-end gap-2 border-t border-[#ebe7de] p-5 transition-colors dark:border-[#2a3f35] sm:p-6"><Button variant="outline" onClick={() => setReviewOpen(false)} className="h-11 rounded-xl border-[#ded9cf] text-sm font-bold text-[#77756d] transition-colors dark:border-[#2a3f35] dark:text-[#7a9488]">Cancel</Button><Button onClick={() => { setReviewOpen(false); showToast("Care update shared with family"); }} className="h-11 rounded-xl bg-[#2f6b58] px-5 text-sm font-bold text-white transition-all hover:bg-[#265a4a] dark:bg-[#4ec9a0] dark:text-[#0a1f18] dark:hover:bg-[#5ed4aa]">Share with family <ArrowUpRight className="h-3.5 w-3.5" /></Button></div></div></div>}
 
       {noteOpen && <div role="dialog" aria-modal="true" aria-labelledby="note-title" className="fixed inset-0 z-50 flex items-center justify-center bg-[#20312c]/35 p-4 backdrop-blur-sm transition-colors dark:bg-[#000000]/50"><div className="w-full max-w-lg overflow-hidden rounded-[24px] border border-[#e1ddd3] bg-[#fffdf9] shadow-2xl transition-colors dark:border-[#2a3f35] dark:bg-[#152019]"><div className="flex items-start justify-between border-b border-[#ebe7de] p-5 transition-colors dark:border-[#2a3f35] sm:p-6"><div><div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#a56c4a] dark:text-[#4ec9a0]"><BookHeart className="h-3.5 w-3.5" /> Private family memory</div><h3 id="note-title" className="mt-2 font-display text-[25px] font-semibold tracking-[-0.035em] text-[#2b3934] dark:text-[#e8f0ec]">What should the family remember?</h3></div><button aria-label="Close visit note" onClick={() => setNoteOpen(false)} className="rounded-lg p-2 text-[#aaa398] transition-colors hover:bg-[#f2f0ea] dark:text-[#7a9488] dark:hover:bg-[#1a2b23]"><X className="h-5 w-5" /></button></div><div className="p-5 sm:p-6"><label htmlFor="visit-note" className="text-xs font-bold text-[#5f675f] dark:text-[#7a9488]">A moment, update, or follow-up</label><textarea id="visit-note" autoFocus value={noteText} onChange={(event) => setNoteText(event.target.value)} className="mt-2 min-h-[130px] w-full resize-none rounded-2xl border border-[#dedbd2] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#4d564e] outline-none transition focus:border-[#79a88f] focus:ring-4 focus:ring-[#dcebe4] dark:border-[#2a3f35] dark:bg-[#111c16] dark:text-[#e8f0ec] dark:focus:border-[#4ec9a0] dark:focus:ring-[#1a3a2e]" placeholder="Write in your own words…" /><div className="mt-4 flex items-center gap-2 text-xs text-[#918c82] dark:text-[#5a7a6a]"><ShieldCheck className="h-4 w-4 text-[#6d9b82] dark:text-[#4ec9a0]" /> Demo preview · family privacy applies after sign-in.</div></div><div className="flex justify-end gap-2 border-t border-[#ebe7de] p-5 transition-colors dark:border-[#2a3f35] sm:p-6"><Button variant="outline" onClick={() => setNoteOpen(false)} className="h-11 rounded-xl border-[#ded9cf] text-sm font-bold text-[#77756d] transition-colors dark:border-[#2a3f35] dark:text-[#7a9488]">Cancel</Button><Button onClick={() => { setNoteSaved(true); setNoteOpen(false); showToast("Private note saved in demo"); }} className="h-11 rounded-xl bg-[#2f6b58] px-5 text-sm font-bold text-white transition-all hover:bg-[#265a4a] dark:bg-[#4ec9a0] dark:text-[#0a1f18] dark:hover:bg-[#5ed4aa]">Save note</Button></div></div></div>}
 
